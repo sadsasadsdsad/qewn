@@ -196,6 +196,9 @@
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
         </svg>
       </button>
+      <span class="tb-sep"></span>
+      <small id="saveTxt" class="save-txt">Сохранено</small>
+      <span id="saveDot" class="save-dot"></span>
     </header>
 
     <div id="scroller" class="fadebox">
@@ -338,7 +341,11 @@
     </div>
     <div class="wv-body fadebox">
       <h1 id="wvTitle" class="wv-title"></h1>
-      <div id="wvContent" class="wv-content"></div>
+      <div id="wvName" class="wv-name"></div>
+      <div id="wvType" class="wv-type"></div>
+      <div id="wvDesc" class="wv-desc"></div>
+      <div id="wvTimeline" class="wv-timeline"></div>
+      <div id="wvHint" class="wv-hint"></div>
       <div id="wvQuotes" class="wv-quotes"></div>
     </div>
   </div>
@@ -346,28 +353,24 @@
 
 <!-- Модал энциклопедии (создание/редактирование) -->
 <div id="wikiModal" class="modal-overlay" hidden>
-  <div class="modal-card wiki-form-card" role="dialog" aria-modal="true" aria-labelledby="wikiFormTitle">
-    <div class="modal-head">
-      <h2 id="wikiFormTitle" class="modal-title">Статья энциклопедии</h2>
-      <button class="sibtn modal-close" id="closeWikiModal" aria-label="Закрыть">
+  <div class="modal-card wm-card" role="dialog" aria-modal="true" aria-labelledby="wikiFormTitle">
+    <div class="modal-head wm-head">
+      <h2 id="wmTitle" class="modal-title">Статья энциклопедии</h2>
+      <button class="sibtn modal-close" id="wmClose" aria-label="Закрыть">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="modal-body">
-      <input type="text" id="wikiTitleInput" class="wiki-input-title" placeholder="Название термина" maxlength="80">
-      <select id="wikiTypeSelect" class="wiki-select-type"></select>
-      <textarea id="wikiContentInput" class="wiki-textarea" placeholder="Описание термина..." rows="6"></textarea>
-      <div class="wiki-quote-add">
-        <input type="text" id="wikiQuoteInput" placeholder="Цитата из текста (необязательно)">
-        <button class="ibtn" id="addWikiQuote" title="Добавить цитату">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-      </div>
-      <div id="wikiQuotesList" class="wiki-quotes-list"></div>
+    <div class="modal-body wm-body">
+      <input type="text" id="wmName" class="wm-input" placeholder="Название термина" maxlength="80">
+      <div id="wmTypeChips" class="wm-type-chips"></div>
+      <span id="wmTypeBadge" class="wm-badge"></span>
+      <textarea id="wmDesc" class="wm-textarea" placeholder="Описание термина..." rows="4"></textarea>
+      <div id="wmPrev" class="wm-preview"></div>
     </div>
-    <div class="modal-foot">
-      <button class="chip" id="cancelWiki">Отмена</button>
-      <button class="chip on" id="saveWiki">Сохранить</button>
+    <div class="modal-foot wm-foot">
+      <button class="chip" id="wmCancel">Отмена</button>
+      <button class="chip on" id="wmSave">Сохранить</button>
+      <button class="chip danger" id="wmDelete" style="display:none">Удалить</button>
     </div>
   </div>
 </div>
