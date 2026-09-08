@@ -1002,16 +1002,10 @@ function normalizeState(s) {
      const on = (force === undefined) ? !$('#wikiPanel').classList.contains('on') : force;
      $('#wikiPanel').classList.toggle('on', on);
      $('#btnWiki').classList.toggle('on', on);
-     
-     // Добавляем/убираем класс для затемнения фона (как в досье)
-     document.body.classList.toggle('wiki-open', on);
-     
      if (on) {
        renderWikiFilters();
        renderWiki();
        setTimeout(positionEdRz, 450);
-     } else {
-       document.body.classList.remove('wiki-open');
      }
    }
 
@@ -2339,154 +2333,36 @@ function normalizeState(s) {
    });
 
    /* ═══════════════════════════════════════════════════════════════
-      ЭКСПОРТ С НАСТРОЙКАМИ
+      ЭКСПОРТ
       ═══════════════════════════════════════════════════════════════ */
-   let exportFmt = 'txt';
-   let exportScope = 'current';
-   
-   // Инициализация модального окна экспорта
-   const exModal = $('#exportModal');
-   const exFormats = $('#exFormats');
-   const exScope = $('#exScope');
-   
-   if (exFormats) {
-     exFormats.querySelectorAll('button').forEach(function(btn) {
-       btn.addEventListener('click', function() {
-         exFormats.querySelectorAll('button').forEach(function(b) { 
-           b.classList.remove('on'); 
-           b.setAttribute('aria-pressed', 'false');
-         });
-         btn.classList.add('on');
-         btn.setAttribute('aria-pressed', 'true');
-         exportFmt = btn.dataset.fmt;
-       });
-     });
-   }
-   
-   if (exScope) {
-     exScope.querySelectorAll('button').forEach(function(btn) {
-       btn.addEventListener('click', function() {
-         exScope.querySelectorAll('button').forEach(function(b) { 
-           b.classList.remove('on'); 
-           b.setAttribute('aria-pressed', 'false');
-         });
-         btn.classList.add('on');
-         btn.setAttribute('aria-pressed', 'true');
-         exportScope = btn.dataset.scope;
-       });
-     });
-   }
-   
-   function openExportModal() {
-     exModal.classList.add('on');
-     $('#veil').style.display = 'block';
-   }
-   
-   function closeExportModal() {
-     exModal.classList.remove('on');
-     $('#veil').style.display = '';
-   }
-   
-   $('#btnExport').addEventListener('click', openExportModal);
-   $('#exClose').addEventListener('click', closeExportModal);
-   $('#exCancel').addEventListener('click', closeExportModal);
-   
-   $('#exDownload').addEventListener('click', function() {
+   $('#btnExport').addEventListener('click', function() {
      const b = book();
      if (!b) return;
-     
-     const includeMeta = $('#exIncludeMeta').checked;
-     const includeStats = $('#exIncludeStats').checked;
-     const encoding = $('#exEncoding').value;
-     
-     let content = '';
-     let filename = (b.title || 'рукопись') + '.' + exportFmt;
-     
-     // Формируем контент в зависимости от формата
-     if (exportFmt === 'txt' || exportFmt === 'md') {
-       if (includeMeta) {
-         content += (b.title || 'Без названия').toUpperCase() + '\n';
-         if (b.desc) content += '\n' + b.desc + '\n';
-         content += '\n';
-       }
-       
-       const chaptersToExport = exportScope === 'all' ? b.chapters : [currentCh()];
-       chaptersToExport.forEach(function(c, idx) {
-         if (!c) return;
-         const d = tmp(c.html);
-         
-         if (exportFmt === 'md') {
-           d.childNodes.forEach(function(n) {
-             if (n.nodeType !== 1) return;
-             if (n.classList.contains('sep')) { content += '\n---\n\n'; return; }
-             const t = n.textContent.trim();
-             if (!t) return;
-             if (n.tagName === 'H1') content += '# ' + t + '\n\n';
-             else if (n.tagName === 'H2') content += '## ' + t + '\n\n';
-             else content += t + '\n';
-           });
-         } else {
-           d.childNodes.forEach(function(n) {
-             if (n.nodeType !== 1) return;
-             if (n.classList.contains('sep')) { content += '\n* * *\n\n'; return; }
-             const t = n.textContent.trim();
-             if (!t) return;
-             if (n.tagName === 'H1') content += t + '\n\n';
-             else if (n.tagName === 'H2') content += t + '\n\n';
-             else content += t + '\n';
-           });
-         }
-         
-         if (idx < chaptersToExport.length - 1) content += '\n\n';
+     const ch = currentCh();
+     if (ch) { ch.html = cleanHtml(); ch.pos = scroller.scrollTop; }
+
+     let out = (b.title || 'Без названия').toUpperCase() + '\n';
+     b.chapters.forEach(function(c) {
+       const d = tmp(c.html);
+       out += '\n\n';
+       d.childNodes.forEach(function(n) {
+         if (n.nodeType !== 1) return;
+         if (n.classList.contains('sep')) { out += '\n* * *\n\n'; return; }
+         const t = n.textContent.trim();
+         if (!t) return;
+         if (n.tagName === 'H1') out += t + '\n\n';
+         else if (n.tagName === 'H2') out += t + '\n\n';
+         else out += t + '\n';
        });
-       
-       if (includeStats) {
-         const totalWords = b.chapters.reduce(function(sum, c) { return sum + chapterWords(c); }, 0);
-         content += '\n\n---\nСтатистика: ' + totalWords + ' слов\n';
-       }
-       
-       downloadFile(content, filename, 'text/plain;charset=' + encoding);
-       
-     } else if (exportFmt === 'html') {
-       content = '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>' + (b.title || 'Без названия') + '</title></head><body>';
-       if (includeMeta) {
-         content += '<h1>' + (b.title || 'Без названия') + '</h1>';
-         if (b.desc) content += '<p>' + b.desc + '</p>';
-       }
-       
-       const chaptersToExport = exportScope === 'all' ? b.chapters : [currentCh()];
-       chaptersToExport.forEach(function(c) {
-         if (!c) return;
-         content += c.html;
-       });
-       
-       if (includeStats) {
-         const totalWords = b.chapters.reduce(function(sum, c) { return sum + chapterWords(c); }, 0);
-         content += '<hr><p>Статистика: ' + totalWords + ' слов</p>';
-       }
-       
-       content += '</body></html>';
-       downloadFile(content, filename, 'text/html;charset=' + encoding);
-       
-     } else {
-       // Для DOCX, FB2, EPUB - заглушки с уведомлением
-       alert('Формат ' + exportFmt.toUpperCase() + ' будет доступен в следующей версии. Пока доступен экспорт в TXT, Markdown и HTML.');
-       return;
-     }
-     
-     closeExportModal();
-   });
-   
-   function downloadFile(content, filename, type) {
-     const blob = new Blob([content], { type: type });
-     const a = document.createElement('a');
-     a.href = URL.createObjectURL(blob);
-     a.download = filename;
-     document.body.appendChild(a);
+     });
+
+     persist();
+     const a = mk('a');
+     a.href = URL.createObjectURL(new Blob([out], { type: 'text/plain;charset=utf-8' }));
+     a.download = (b.title || 'рукопись') + '.txt';
      a.click();
-     document.body.removeChild(a);
      setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
-   }
+   });
 
    /* ═══════════════════════════════════════════════════════════════
       ГЛОБАЛЬНЫЕ ГОРЯЧИЕ КЛАВИШИ
