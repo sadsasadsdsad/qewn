@@ -2368,6 +2368,137 @@ function normalizeState(s) {
    });
 
    /* ═══════════════════════════════════════════════════════════════
+      ЭКСПОРТ КНИГИ (МОДАЛЬНОЕ ОКНО)
+      ═══════════════════════════════════════════════════════════════ */
+   function openExportModal() {
+     $('#exportModal').classList.add('on');
+     $('#exportModal').hidden = false;
+     const b = book();
+     if (b) {
+       const fname = (b.title || 'рукопись').replace(/[^a-z0-9а-яё]/gi, '_').toLowerCase();
+       $('#exportFilename').value = fname;
+     }
+     setTimeout(function() { 
+       const firstBtn = $('#exportModal .export-btn');
+       if (firstBtn) firstBtn.focus();
+     }, 60);
+   }
+   
+   function closeExportModal() {
+     $('#exportModal').classList.remove('on');
+     setTimeout(function() { $('#exportModal').hidden = true; }, 200);
+   }
+   
+   function doExport(format) {
+     const b = book();
+     if (!b) return;
+     
+     const chaptersMode = $('#exportChapters').value;
+     let filenameBase = $('#exportFilename').value.trim() || (b.title || 'рукопись').replace(/[^a-z0-9а-яё]/gi, '_').toLowerCase();
+     
+     let content = '';
+     let mimeType = 'text/plain;charset=utf-8';
+     let ext = format;
+     
+     if (format === 'txt') {
+       content = (b.title || 'Без названия').toUpperCase() + '\n\n';
+       b.chapters.forEach(function(c, idx) {
+         if (chaptersMode === 'current' && currentCh() && c.id !== currentCh().id) return;
+         const d = tmp(c.html);
+         d.childNodes.forEach(function(n) {
+           if (n.nodeType !== 1) return;
+           if (n.classList.contains('sep')) { content += '\n* * *\n\n'; return; }
+           const t = n.textContent.trim();
+           if (!t) return;
+           if (n.tagName === 'H1') content += '\n\n' + t.toUpperCase() + '\n\n';
+           else if (n.tagName === 'H2') content += '\n' + t + '\n\n';
+           else content += t + '\n';
+         });
+       });
+     } else if (format === 'md') {
+       content = '# ' + (b.title || 'Без названия') + '\n\n';
+       b.chapters.forEach(function(c, idx) {
+         if (chaptersMode === 'current' && currentCh() && c.id !== currentCh().id) return;
+         const d = tmp(c.html);
+         let chTitle = chapterTitle(c);
+         if (chTitle) content += '## ' + chTitle + '\n\n';
+         d.childNodes.forEach(function(n) {
+           if (n.nodeType !== 1) return;
+           if (n.classList.contains('sep')) { content += '\n---\n\n'; return; }
+           const t = n.textContent.trim();
+           if (!t) return;
+           if (n.tagName === 'H1') content += '### ' + t + '\n\n';
+           else if (n.tagName === 'H2') content += '#### ' + t + '\n\n';
+           else if (n.tagName === 'BLOCKQUOTE') content += '> ' + t + '\n\n';
+           else content += t + '\n\n';
+         });
+       });
+     } else if (format === 'html') {
+       content = '<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="UTF-8">\n<title>' + esc(b.title || 'Без названия') + '</title>\n<style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;line-height:1.6}h1,h2{margin-top:2em}.sep{text-align:center;color:#999}</style>\n</head>\n<body>\n<h1>' + esc(b.title || 'Без названия') + '</h1>\n';
+       b.chapters.forEach(function(c, idx) {
+         if (chaptersMode === 'current' && currentCh() && c.id !== currentCh().id) return;
+         const d = tmp(c.html);
+         let chTitle = chapterTitle(c);
+         if (chTitle) content += '<h2>' + esc(chTitle) + '</h2>\n';
+         d.childNodes.forEach(function(n) {
+           if (n.nodeType !== 1) return;
+           if (n.classList.contains('sep')) { content += '<div class="sep">* * *</div>\n'; return; }
+           content += n.outerHTML + '\n';
+         });
+       });
+       content += '\n</body>\n</html>';
+       mimeType = 'text/html;charset=utf-8';
+     } else {
+       content = (b.title || 'Без названия').toUpperCase() + '\n\n';
+       b.chapters.forEach(function(c, idx) {
+         if (chaptersMode === 'current' && currentCh() && c.id !== currentCh().id) return;
+         const d = tmp(c.html);
+         d.childNodes.forEach(function(n) {
+           if (n.nodeType !== 1) return;
+           if (n.classList.contains('sep')) { content += '\n* * *\n\n'; return; }
+           const t = n.textContent.trim();
+           if (!t) return;
+           if (n.tagName === 'H1') content += '\n\n' + t.toUpperCase() + '\n\n';
+           else if (n.tagName === 'H2') content += '\n' + t + '\n\n';
+           else content += t + '\n';
+         });
+       });
+       if (format === 'docx') {
+         alert('DOCX экспорт будет доступен в следующей версии. Скачан TXT файл.');
+       } else if (format === 'fb2') {
+         alert('FB2 экспорт будет доступен в следующей версии. Скачан TXT файл.');
+       } else if (format === 'epub') {
+         alert('EPUB экспорт будет доступен в следующей версии. Скачан TXT файл.');
+       }
+     }
+     
+     persist();
+     const a = mk('a');
+     a.href = URL.createObjectURL(new Blob([content], { type: mimeType }));
+     a.download = filenameBase + '.' + ext;
+     a.click();
+     setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+     closeExportModal();
+   }
+   
+   $('#btnExportTop').addEventListener('click', openExportModal);
+   $('#bvExport').addEventListener('click', openExportModal);
+   $('#closeExport').addEventListener('click', closeExportModal);
+   $('#exportModal').addEventListener('click', function(e) { if (e.target === this) closeExportModal(); });
+   
+   $$('#exportModal .export-btn').forEach(function(btn) {
+     btn.addEventListener('click', function() {
+       doExport(this.dataset.format);
+     });
+   });
+   
+   document.addEventListener('keydown', function(e) {
+     if (e.key === 'Escape' && $('#exportModal').classList.contains('on')) {
+       closeExportModal();
+     }
+   });
+   
+   /* ═══════════════════════════════════════════════════════════════
       ГЛОБАЛЬНЫЕ ГОРЯЧИЕ КЛАВИШИ
       ═══════════════════════════════════════════════════════════════ */
    document.addEventListener('keydown', function(e) {
@@ -2383,6 +2514,7 @@ function normalizeState(s) {
      if (e.key === 'Escape') {
        if ($('#wikiViewModal').classList.contains('on')) { closeWikiView(); return; }
        if ($('#wikiModal').classList.contains('on')) { closeWikiModal(); return; }
+       if ($('#exportModal').classList.contains('on')) { closeExportModal(); return; }
        if (searchOpen) { closeSearch(); return; }
        if ($('#wikiPanel').classList.contains('on')) { toggleWikiPanel(false); return; }
        if (!bookView.hidden) {
