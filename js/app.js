@@ -69,14 +69,17 @@ function debounce(fn, delay) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+   ИНИЦИАЛИЗАЦИЯ ПОСЛЕ ЗАГРУЗКИ DOM
    ═══════════════════════════════════════════════════════════════ */
+
+// Глобальное состояние
 let state, menuOpen = false, menuBlock = null, menuItems = [], menuIdx = 0;
 let selectedSep = null, saveTimer = null, highlightTimer = null;
 let dragChId = null, editingWikiId = null, wikiFilter = '', wikiTypeFilter = 'all';
 let selectedType = 'city', searchOpen = false, searchResults = [], searchIdx = 0;
 let zenAnchor = null, applyMarksTimer = null;
 
+function initApp() {
 const editor = $('#editor');
 const scroller = $('#scroller');
 const list = $('#chlist');
@@ -2406,5 +2409,13 @@ function normalizeState(s) {
    bookView.hidden = true;
    renderLibrary();
    saveTxt.textContent = 'Сохранено';
+}
 
-   })();
+// Запуск после загрузки DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+})();
