@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Черновик — минималистичное приложение для написания книг">
+<title>Черновик — библиотека</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23191712'/%3E%3Crect x='11' y='11' width='10' height='10' fill='%23c93a2b' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300..700;1,7..72,300..700&family=Unbounded:wght@300;400;500;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     БИБЛИОТЕКА
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="library" aria-label="Библиотека книг">
+  <header class="lib-top">
+    <div class="brand">
+      <span class="dia" aria-hidden="true"></span>
+      <b>ЧЕРНОВИК</b>
+      <small>для книг</small>
+    </div>
+    <div class="lib-actions">
+      <button class="ibtn" id="btnBackup" title="Резервная копия: скачать все книги" aria-label="Скачать резервную копию">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 4v9m0 0 3.5-3.5M12 13 8.5 9.5"/>
+          <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
+        </svg>
+      </button>
+      <button class="ibtn" id="btnRestore" title="Резервная копия: загрузить из файла" aria-label="Загрузить резервную копию">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 13V4m0 0 3.5 3.5M12 4 8.5 7.5"/>
+          <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
+        </svg>
+      </button>
+      <button class="ibtn btn-theme" title="Переключить тему" aria-label="Переключить тему">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>
+        </svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="display:none" aria-hidden="true">
+          <path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+  <div class="lib-body">
+    <div class="lib-head">
+      <div>
+        <div class="lbl lbl-acc">Библиотека</div>
+        <h1 class="lib-title">Ваши книги</h1>
+      </div>
+      <div class="lib-stats" id="libStats" aria-live="polite"></div>
+    </div>
+    <div class="shelf" id="shelf" role="list" aria-label="Список книг"></div>
+    <div class="lib-foot">все рукописи хранятся локально · делайте резервные копии</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ОБЗОР КНИГИ
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="bookView" hidden aria-label="Обзор книги">
+  <header class="bv-top">
+    <div class="left">
+      <button class="ibtn" id="bvBack" title="К списку книг" aria-label="Вернуться к списку книг">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15.5 4.5 8 12l7.5 7.5"/>
+        </svg>
+      </button>
+      <div class="brand">
+        <span class="dia" aria-hidden="true"></span>
+        <b>ЧЕРНОВИК</b>
+        <small>обзор книги</small>
+      </div>
+    </div>
+    <div class="lib-actions">
+      <button class="ibtn" id="bvOpen" title="Открыть в редакторе" aria-label="Открыть книгу в редакторе">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 6.2C10 4.5 7.3 3.8 4 3.8v14c3.3 0 6 .7 8 2.4 2-1.7 4.7-2.4 8-2.4v-14c-3.3 0-6 .7-8 2.4Z"/>
+          <path d="M12 6.2v14"/>
+        </svg>
+      </button>
+      <button class="ibtn btn-theme" title="Переключить тему" aria-label="Переключить тему">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>
+        </svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="display:none" aria-hidden="true">
+          <path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+  <div class="bv-body">
+    <div class="bv-head enter">
+      <div class="bv-title-row">
+        <span class="wv-dia" aria-hidden="true"></span>
+        <h1 id="bvTitle"></h1>
+        <span class="bv-type">книга</span>
+      </div>
+      <div class="bv-desc" id="bvDesc"></div>
+      <div class="bv-stats" id="bvStats"></div>
+    </div>
+    <div class="bv-sec">
+      <span class="lbl lbl-acc">Главы и их начало</span>
+    </div>
+    <div class="bv-grid" id="bvGrid" role="list" aria-label="Список глав"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     РАБОЧЕЕ ПРОСТРАНСТВО
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="workspace" hidden aria-label="Рабочее пространство">
+  <aside id="side" aria-label="Панель навигации">
+    <div class="brand">
+      <span class="dia" aria-hidden="true"></span>
+      <b>ЧЕРНОВИК</b>
+      <small>для книг</small>
+    </div>
+    <div class="bookbox">
+      <div class="lbl">Книга</div>
+      <input id="bookTitle" autocomplete="off" spellcheck="false" aria-label="Название книги">
+    </div>
+    <div class="chapters-label">
+      <span class="lbl">Главы</span>
+      <span class="lbl" id="chCount"></span>
+    </div>
+    <div id="chlist" role="list" aria-label="Список глав"></div>
+    <button id="addCh" aria-label="Добавить новую главу">+&nbsp;&nbsp;НОВАЯ ГЛАВА</button>
+    <div class="side-foot">
+      <span id="totalWords">0 слов</span>
+      <span id="totalRead"></span>
+    </div>
+    <div id="sideRz" class="rz" title="Потяните, чтобы изменить ширину" aria-label="Изменить ширину панели"></div>
+  </aside>
+
+  <div id="main">
+    <header id="topbar">
+      <button class="ibtn" id="btnShelf" title="К списку книг" aria-label="Вернуться к списку книг">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4.5 4h4v16h-4zM10.5 4h4v16h-4zM16.6 5.4l3.9 1.1-4.1 13.9-3.9-1.1z"/>
+        </svg>
+      </button>
+      <button class="ibtn" id="btnSide" title="Показать/скрыть панель глав" aria-label="Переключить панель глав">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h10"/>
+        </svg>
+      </button>
+      <div class="crumb" aria-label="Навигационная цепочка">
+        <b id="crumbBook"></b>
+        <span class="cd" aria-hidden="true"></span>
+        <span id="crumbCh"></span>
+      </div>
+      <span class="chip" id="wcTop">0 слов</span>
+      <span class="tb-sep" aria-hidden="true"></span>
+      <button class="ibtn" id="btnSearch" title="Поиск по рукописи · Ctrl+F" aria-label="Открыть поиск">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.2"/>
+          <path d="m15.5 15.5 4.5 4.5"/>
+        </svg>
+      </button>
+      <button class="ibtn" id="btnZen" title="Режим фокуса" aria-label="Включить режим фокуса">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5"/>
+          <circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button class="ibtn on" id="btnSpell" title="Орфография: вкл" aria-label="Переключить проверку орфографии">
+        <svg class="spell-svg" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+          <text x="11" y="14" text-anchor="middle" font-size="13.5" font-family="Literata,Georgia,serif" font-weight="600" fill="currentColor">ё</text>
+          <path class="wavy" d="M4 18.4q1.75-2 3.5 0t3.5 0 3.5 0 3.5 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <line class="offline" x1="4" y1="19" x2="18" y2="4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="ibtn" id="btnWiki" title="Энциклопедия мира" aria-label="Открыть энциклопедию">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5"/>
+          <path d="M3.5 12h17"/>
+          <path d="M12 3.5c2.6 2.3 3.9 5.1 3.9 8.5s-1.3 6.2-3.9 8.5c-2.6-2.3-3.9-5.1-3.9-8.5s1.3-6.2 3.9-8.5z"/>
+        </svg>
+      </button>
+      <button class="ibtn btn-theme" title="Переключить тему" aria-label="Переключить тему">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>
+        </svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="display:none" aria-hidden="true">
+          <path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5Z"/>
+        </svg>
+      </button>
+      <button class="ibtn" id="btnExport" title="Экспорт рукописи" aria-label="Экспортировать рукопись">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14"/>
+        </svg>
+      </button>
+    </header>
+
+    <div id="scroller">
+      <main id="editor" contenteditable="true" spellcheck="true" lang="ru" role="textbox" aria-multiline="true" aria-label="Редактор текста"></main>
+    </div>
+    <div id="edRz" class="rz" title="Потяните, чтобы изменить ширину текста" aria-label="Изменить ширину редактора"></div>
+
+    <footer id="statusbar">
+      <span class="savebox">
+        <span id="saveDot" aria-hidden="true"></span>
+        <span id="saveTxt">Сохранено</span>
+      </span>
+      <span id="statRight"></span>
+    </footer>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ЭНЦИКЛОПЕДИЯ
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="wikiPanel" aria-label="Энциклопедия мира">
+  <div class="wp-head">
+    <span class="wp-title">
+      <span class="dia" aria-hidden="true"></span>
+      Энциклопедия
+      <span class="wp-count" id="wpCount"></span>
+    </span>
+    <button class="lbl lbl-btn" id="wpAdd" aria-label="Добавить новую статью">+ статья</button>
+    <button class="sibtn" id="wpFull" title="Во весь экран" aria-label="Развернуть на весь экран">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+      </svg>
+    </button>
+    <button class="sibtn" id="wpClose" title="Закрыть" aria-label="Закрыть энциклопедию">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18"/>
+      </svg>
+    </button>
+  </div>
+  <input id="wpSearch" autocomplete="off" placeholder="Поиск по миру книги…" aria-label="Поиск по энциклопедии">
+  <div class="wp-filters" id="wpFilters" role="group" aria-label="Фильтры по типам"></div>
+  <div class="wp-body fadebox f-bot" id="wpBody" role="list" aria-label="Список статей"></div>
+  <div id="wikiRz" class="rz" title="Потяните, чтобы изменить ширину" aria-label="Изменить ширину панели"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ПОИСК
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="searchPanel" role="dialog" aria-label="Поиск по рукописи">
+  <div class="sp-in">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+      <circle cx="10.8" cy="10.8" r="6.2"/>
+      <path d="m15.5 15.5 4.5 4.5"/>
+    </svg>
+    <input id="spInput" autocomplete="off" placeholder="Поиск по рукописи…" aria-label="Введите запрос для поиска">
+    <span id="spCount" aria-live="polite"></span>
+    <button class="sibtn" id="spClose" title="Закрыть" aria-label="Закрыть поиск">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="sp-res fadebox" id="spRes" role="list" aria-label="Результаты поиска"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ВСПОМОГАТЕЛЬНЫЕ ЭЛЕМЕНТЫ
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="veil" aria-hidden="true"></div>
+<button id="zenpill" aria-label="Выйти из режима фокуса">РЕЖИМ ФОКУСА — ESC, ЧТОБЫ ВЫЙТИ</button>
+<input type="file" id="restoreInput" accept=".json,application/json" aria-hidden="true">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     МОДАЛКА СТАТЬИ
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="wikiModal" role="dialog" aria-label="Редактирование статьи">
+  <div class="wm-card">
+    <div class="wm-head">
+      <span class="wv-dia" aria-hidden="true"></span>
+      <b id="wmTitle">Новая статья</b>
+      <span class="wv-type" id="wmTypeBadge"></span>
+      <button class="sibtn" id="wmClose" style="color:var(--ink2)" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="m-field">
+      <span class="lbl">Название</span>
+      <input id="wmName" autocomplete="off" placeholder="Туманная Гавань" aria-label="Название статьи">
+    </div>
+    <div class="m-field">
+      <span class="lbl">Тип</span>
+      <div class="type-chips" id="wmTypeChips" role="group" aria-label="Выбор типа статьи"></div>
+    </div>
+    <div class="m-field">
+      <span class="lbl">Описание</span>
+      <textarea id="wmDesc" placeholder="портовый город на северном побережье…" aria-label="Описание статьи"></textarea>
+    </div>
+    <div class="wm-sec">
+      <div class="lbl" style="margin-bottom:8px">Упоминания в тексте</div>
+      <div id="wmPrev" aria-live="polite"></div>
+    </div>
+    <div class="wv-foot" style="padding:16px 0 6px">
+      <button class="m-btn danger" id="wmDelete" aria-label="Удалить статью">УДАЛИТЬ</button>
+      <span style="flex:1"></span>
+      <button class="m-btn" id="wmCancel" aria-label="Отменить изменения">ОТМЕНА</button>
+      <button class="m-btn primary" id="wmSave" aria-label="Сохранить статью">СОХРАНИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     МОДАЛКА ЭКСПОРТА
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="exportModal" role="dialog" aria-label="Экспорт рукописи">
+  <div class="wm-card">
+    <div class="wm-head">
+      <span class="wv-dia" aria-hidden="true"></span>
+      <b>Экспорт рукописи</b>
+      <button class="sibtn" id="exClose" style="color:var(--ink2)" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="m-field">
+      <span class="lbl">Формат</span>
+      <div class="type-chips" id="exFormats" role="group" aria-label="Выбор формата">
+        <button class="wp-f on" data-fmt="txt" aria-pressed="true">TXT</button>
+        <button class="wp-f" data-fmt="md" aria-pressed="false">Markdown</button>
+        <button class="wp-f" data-fmt="html" aria-pressed="false">HTML</button>
+        <button class="wp-f" data-fmt="docx" aria-pressed="false">DOCX</button>
+        <button class="wp-f" data-fmt="fb2" aria-pressed="false">FB2</button>
+        <button class="wp-f" data-fmt="epub" aria-pressed="false">EPUB</button>
+      </div>
+    </div>
+    
+    <div class="m-field">
+      <span class="lbl">Что экспортировать</span>
+      <div class="type-chips" id="exScope" role="group" aria-label="Выбор содержимого">
+        <button class="wp-f on" data-scope="current" aria-pressed="true">Текущая глава</button>
+        <button class="wp-f" data-scope="all" aria-pressed="false">Все главы</button>
+      </div>
+    </div>
+    
+    <div class="m-field">
+      <label class="lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="exIncludeMeta" checked>
+        <span>Включить метаданные (название, автор, описание)</span>
+      </label>
+    </div>
+    
+    <div class="m-field">
+      <label class="lbl" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="exIncludeStats" checked>
+        <span>Включить статистику (количество слов, символов)</span>
+      </label>
+    </div>
+    
+    <div class="m-field">
+      <span class="lbl">Кодировка</span>
+      <select id="exEncoding" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-family:var(--f-serif);font-size:13.5px">
+        <option value="utf-8">UTF-8 (рекомендуется)</option>
+        <option value="windows-1251">Windows-1251 (CP1251)</option>
+      </select>
+    </div>
+    
+    <div class="wv-foot" style="padding:16px 0 6px">
+      <span style="flex:1"></span>
+      <button class="m-btn" id="exCancel" aria-label="Отменить экспорт">ОТМЕНА</button>
+      <button class="m-btn primary" id="exDownload" aria-label="Скачать файл">СКАЧАТЬ</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
