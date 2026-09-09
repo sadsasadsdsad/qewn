@@ -1,385 +1,470 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Черновик — минималистичное приложение для написания книг">
-<title>Черновик — библиотека</title>
-
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23191712'/%3E%3Crect x='11' y='11' width='10' height='10' fill='%23c93a2b' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300..700;1,7..72,300..700&family=Unbounded:wght@300;400;500;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
+    <meta charset="UTF-8">
+    <title>Kyora Clone (Terraria Style)</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Цвет неба */
+            font-family: 'Courier New', Courier, monospace;
+        }
+        canvas {
+            display: block;
+            image-rendering: pixelated; /* Пиксельный стиль */
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: none;
+        }
+        #inventory {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .slot {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #555;
+            cursor: pointer;
+            image-rendering: pixelated;
+        }
+        .slot.active {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     БИБЛИОТЕКА
-     ═══════════════════════════════════════════════════════════════ -->
-<section id="library" aria-label="Библиотека книг">
-  <header class="lib-top">
-    <div class="brand">
-      <span class="dia" aria-hidden="true"></span>
-      <b>ЧЕРНОВИК</b>
-      <small>для книг</small>
-    </div>
-    <div class="lib-actions">
-      <button class="ibtn" id="btnBackup" title="Резервная копия: скачать все книги" aria-label="Скачать резервную копию">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 4v9m0 0 3.5-3.5M12 13 8.5 9.5"/>
-          <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
-        </svg>
-      </button>
-      <button class="ibtn" id="btnRestore" title="Резервная копия: загрузить из файла" aria-label="Загрузить резервную копию">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 13V4m0 0 3.5 3.5M12 4 8.5 7.5"/>
-          <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
-        </svg>
-      </button>
-      <button class="ibtn btn-theme" title="Переключить тему" aria-label="Переключить тему">
-        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>
-        </svg>
-        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="display:none" aria-hidden="true">
-          <path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5Z"/>
-        </svg>
-      </button>
-    </div>
-  </header>
-  <div class="lib-body">
-    <div class="lib-head">
-      <div>
-        <div class="lbl lbl-acc">Библиотека</div>
-        <h1 class="lib-title">Ваши книги</h1>
-      </div>
-      <div class="lib-stats" id="libStats" aria-live="polite"></div>
-    </div>
-    <div class="shelf" id="shelf" role="list" aria-label="Список книг"></div>
-    <div class="lib-foot">все рукописи хранятся локально · делайте резервные копии</div>
-  </div>
-</section>
-
-<input type="file" id="restoreInput" accept=".json,application/json" hidden>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     ОБЗОР КНИГИ
-     ═══════════════════════════════════════════════════════════════ -->
-<section id="bookView" hidden aria-label="Обзор книги">
-  <header class="bv-top">
-    <div class="left">
-      <button class="ibtn" id="bvBack" title="Назад в библиотеку" aria-label="Назад">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m15 18-6-6 6-6"/>
-        </svg>
-      </button>
-      <button class="ibtn" id="bvOpen" title="Открыть редактор" aria-label="Открыть редактор">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 20h9"/>
-          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-        </svg>
-      </button>
-    </div>
-    <div class="right">
-      <button class="ibtn" id="bvExport" title="Экспорт книги" aria-label="Экспорт">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 4v9m0 0 3.5-3.5M12 13 8.5 9.5"/>
-          <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
-        </svg>
-      </button>
-    </div>
-  </header>
-  <div class="bv-body">
-    <div class="bv-head">
-      <div class="bv-title-row">
-        <span class="cv-dia" aria-hidden="true"></span>
-        <h1 id="bvTitle"></h1>
-        <span class="bv-type">рукопись</span>
-      </div>
-      <p class="bv-desc" id="bvDesc"></p>
-      <div class="bv-stats" id="bvStats"></div>
-    </div>
-    <div class="bv-sec">
-      <div class="lbl lbl-acc">Главы</div>
-      <div class="bv-grid" id="bvGrid" role="list"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     РАБОЧЕЕ ПРОСТРАНСТВО
-     ═══════════════════════════════════════════════════════════════ -->
-<div id="workspace" hidden>
-  <aside>
-    <div class="brand">
-      <span class="dia" aria-hidden="true"></span>
-      <b>ЧЕРНОВИК</b>
-      <small>для книг</small>
-    </div>
-    <div class="bookbox">
-      <input type="text" id="bookTitle" placeholder="Название книги" maxlength="80" aria-label="Название книги">
-    </div>
-    <div class="chapters-label">
-      <span class="lbl lbl-acc">Главы</span>
-      <span class="lbl" id="chCount"></span>
-    </div>
-    <div id="chlist" class="fadebox f-bot" role="list" aria-label="Список глав"></div>
-    <button id="addCh" aria-label="Добавить главу">+ Новая глава</button>
-    <div class="side-foot">
-      <span id="totalWords"></span>
-      <span id="totalRead"></span>
-    </div>
-    <div id="sideRz" class="rz" title="Изменить размер панели"></div>
-  </aside>
-
-  <main id="main">
-    <header id="topbar">
-      <button class="ibtn" id="btnSide" title="Боковая панель" aria-label="Боковая панель">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6h18M3 12h18M3 18h18"/>
-        </svg>
-      </button>
-      <nav class="crumb" aria-label="Хлебные крошки">
-        <span class="cd"></span>
-        <span id="crumbBook"></span>
-        <span class="cd"></span>
-        <b id="crumbCh"></b>
-      </nav>
-      <div class="tb-sep"></div>
-      <button class="chip" id="btnZen" title="Режим фокуса (Esc)" aria-label="Режим фокуса">
-        <span id="zenpill">Фокус</span>
-      </button>
-      <div class="tb-sep"></div>
-      <button class="ibtn" id="btnWiki" title="Энциклопедия" aria-label="Энциклопедия">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-        </svg>
-      </button>
-      <button class="ibtn" id="btnSearch" title="Поиск (Ctrl+F)" aria-label="Поиск">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.3-4.3"/>
-        </svg>
-      </button>
-      <button class="ibtn" id="btnSpell" title="Проверка орфографии" aria-label="Проверка орфографии">
-        <svg class="wavy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 20h2a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H4"/>
-          <path d="M10 20h6a2 2 0 0 0 2-2v-4"/>
-          <path d="m16 12 4 4m0-4-4 4"/>
-        </svg>
-        <svg class="offline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m15 9-6 6"/>
-          <path d="m9 9 6 6"/>
-          <path d="M4 20h16"/>
-          <path d="m4 15 3-3"/>
-          <path d="m17 12 3-3"/>
-        </svg>
-      </button>
-      <button class="ibtn" id="btnExportTop" title="Экспорт" aria-label="Экспорт">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 4v9m0 0 3.5-3.5M12 13 8.5 9.5"/>
-          <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
-        </svg>
-      </button>
-      <button class="ibtn btn-theme" title="Переключить тему" aria-label="Переключить тему">
-        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8"/>
-        </svg>
-        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="display:none">
-          <path d="M20 13.5A8 8 0 0 1 10.5 4 8 8 0 1 0 20 13.5Z"/>
-        </svg>
-      </button>
-      <button class="ibtn" id="btnShelf" title="Библиотека" aria-label="Библиотека">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-        </svg>
-      </button>
-      <span class="tb-sep"></span>
-      <small id="saveTxt" class="save-txt">Сохранено</small>
-      <span id="saveDot" class="save-dot"></span>
-    </header>
-
-    <div id="scroller" class="fadebox">
-      <div id="editor" contenteditable="true" spellcheck="false" aria-label="Редактор текста"></div>
-    </div>
-
-    <div id="edRz" class="rz" title="Изменить ширину редактора"></div>
-  </main>
-
-  <aside id="wikiPanel" hidden>
-    <div id="wikiRz" class="rz" title="Изменить размер панели"></div>
-    <div class="wp-head">
-      <span class="wp-title">
-        <span class="dia" aria-hidden="true"></span>
-        Энциклопедия
-        <span class="wp-count" id="wpCount"></span>
-      </span>
-      <button class="lbl lbl-btn" id="wpAdd" aria-label="Добавить новую статью">+ статья</button>
-      <button class="sibtn" id="wpFull" title="Во весь экран" aria-label="Развернуть на весь экран">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
-        </svg>
-      </button>
-      <button class="sibtn" id="wpClose" title="Закрыть" aria-label="Закрыть энциклопедию">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18"/>
-        </svg>
-      </button>
-    </div>
-    <input id="wpSearch" autocomplete="off" placeholder="Поиск по миру книги…" aria-label="Поиск по энциклопедии">
-    <div class="wp-filters" id="wpFilters" role="group" aria-label="Фильтры по типам"></div>
-    <div class="wp-body fadebox f-bot" id="wpBody" role="list" aria-label="Список статей"></div>
-    <div id="wikiInner"></div>
-  </aside>
+<div id="ui">
+    <h1>Kyora Prototype</h1>
+    <p>WASD / Стрелки - Движение</p>
+    <p>ЛКМ - Копать | ПКМ - Ставить блок</p>
+    <p>1-4 - Выбор блока</p>
 </div>
 
-<!-- Плавающее меню выделения -->
-<div id="selbar" class="selbar" role="toolbar" aria-label="Форматирование">
-  <button data-cmd="bold" title="Жирный"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
-  <button data-cmd="italic" title="Курсив"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
-  <div class="sb-sep"></div>
-  <button data-cmd="h1" title="Заголовок 1"><span class="lbl">H1</span></button>
-  <button data-cmd="h2" title="Заголовок 2"><span class="lbl">H2</span></button>
-  <button data-cmd="blockquote" title="Цитата"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.237.25 4-2.75 4v3"/></svg></button>
-  <button data-cmd="sep" title="Разделитель"><span class="lbl">───</span></button>
-</div>
+<div id="inventory"></div>
+<canvas id="gameCanvas"></canvas>
 
-<!-- Меню блоков -->
-<div id="blockmenu" class="bmenu" hidden role="menu">
-  <button data-tag="p" role="menuitem"><span class="lbl">Текст</span></button>
-  <button data-tag="h1" role="menuitem"><span class="lbl">Заголовок 1</span></button>
-  <button data-tag="h2" role="menuitem"><span class="lbl">Заголовок 2</span></button>
-  <button data-tag="blockquote" role="menuitem"><span class="lbl">Цитата</span></button>
-  <div class="bm-sep"></div>
-  <button data-tag="sep" role="menuitem"><span class="lbl">Разделитель</span></button>
-</div>
+<script>
+// --- КОНФИГУРАЦИЯ ---
+const TILE_SIZE = 32;
+const WORLD_WIDTH = 200; // Ширина мира в блоках
+const WORLD_HEIGHT = 100; // Высота мира в блоках
+const GRAVITY = 0.5;
+const TERMINAL_VELOCITY = 12;
+const PLAYER_SPEED = 5;
+const JUMP_FORCE = 9;
 
-<!-- Поиск -->
-<div id="searchPanel" class="search-panel" hidden>
-  <input type="text" id="searchInput" placeholder="Поиск по главе..." aria-label="Поиск">
-  <div class="sp-controls">
-    <button class="sibtn" id="prevHit" title="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
-    <span class="lbl" id="searchCount"></span>
-    <button class="sibtn" id="nextHit" title="Вперёд"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
-  </div>
-  <button class="sibtn" id="closeSearch" title="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-</div>
+// Типы блоков
+const BLOCKS = {
+    AIR: 0,
+    DIRT: 1,
+    GRASS: 2,
+    STONE: 3,
+    WOOD: 4,
+    LEAVES: 5
+};
 
-<!-- Экспорт модал -->
-<div id="exportModal" class="modal-overlay" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
-    <div class="modal-head">
-      <h2 id="exportTitle" class="modal-title">Экспорт книги</h2>
-      <button class="sibtn modal-close" id="closeExport" aria-label="Закрыть">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="export-options">
-        <button class="export-btn" data-format="txt">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/></svg>
-          <span>TXT</span>
-          <small>Простой текст</small>
-        </button>
-        <button class="export-btn" data-format="md">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="m9 10 3 3 3-3"/></svg>
-          <span>Markdown</span>
-          <small>MD формат</small>
-        </button>
-        <button class="export-btn" data-format="html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="m8 9 3 3-3 3"/><path d="m16 9-3 3 3 3"/></svg>
-          <span>HTML</span>
-          <small>Веб-страница</small>
-        </button>
-        <button class="export-btn" data-format="docx">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M10 9h4"/></svg>
-          <span>DOCX</span>
-          <small>Word документ</small>
-        </button>
-        <button class="export-btn" data-format="fb2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><circle cx="12" cy="10" r="3"/><path d="M12 13v4"/></svg>
-          <span>FB2</span>
-          <small>Литрес формат</small>
-        </button>
-        <button class="export-btn" data-format="epub">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
-          <span>EPUB</span>
-          <small>E-book формат</small>
-        </button>
-      </div>
-      <div class="export-settings">
-        <label class="setting-row">
-          <span class="setting-label">Включать главы:</span>
-          <select id="exportChapters" class="setting-select">
-            <option value="all">Все главы</option>
-            <option value="current">Текущая глава</option>
-          </select>
-        </label>
-        <label class="setting-row">
-          <span class="setting-label">Название файла:</span>
-          <input type="text" id="exportFilename" class="setting-input" placeholder="авто">
-        </label>
-      </div>
-    </div>
-  </div>
-</div>
+// Цвета для отрисовки (имитация текстур)
+const BLOCK_COLORS = {
+    [BLOCKS.DIRT]: '#5d4037',
+    [BLOCKS.GRASS]: '#388e3c',
+    [BLOCKS.STONE]: '#757575',
+    [BLOCKS.WOOD]: '#4e342e',
+    [BLOCKS.LEAVES]: '#2e7d32'
+};
 
-<!-- Энциклопедия модал -->
-<div id="wikiViewModal" class="modal-overlay wiki-modal" hidden>
-  <div class="wiki-view-card">
-    <div class="wv-top">
-      <button class="ibtn" id="closeWikiView" aria-label="Закрыть">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m18 15-6-6-6 6"/></svg>
-      </button>
-      <span class="lbl lbl-acc" id="wvTypeLabel">ТЕРМИН</span>
-      <div class="wv-actions">
-        <button class="sibtn" id="wikiEditBtn" title="Редактировать"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
-        <button class="sibtn" id="wikiDelBtn" title="Удалить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
-      </div>
-    </div>
-    <div class="wv-body fadebox">
-      <h1 id="wvTitle" class="wv-title"></h1>
-      <div id="wvName" class="wv-name"></div>
-      <div id="wvType" class="wv-type"></div>
-      <div id="wvDesc" class="wv-desc"></div>
-      <div id="wvTimeline" class="wv-timeline"></div>
-      <div id="wvHint" class="wv-hint"></div>
-      <div id="wvQuotes" class="wv-quotes"></div>
-    </div>
-  </div>
-</div>
+// --- ГЕНЕРАЦИЯ МИРА (Шум Перлина упрощенный) ---
+class SimpleNoise {
+    constructor() {
+        this.perm = new Uint8Array(512);
+        const p = new Uint8Array(256);
+        for (let i = 0; i < 256; i++) p[i] = i;
+        // Тасование
+        for (let i = 255; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [p[i], p[j]] = [p[j], p[i]];
+        }
+        for (let i = 0; i < 512; i++) this.perm[i] = p[i & 255];
+    }
 
-<!-- Модал энциклопедии (создание/редактирование) -->
-<div id="wikiModal" class="modal-overlay" hidden>
-  <div class="modal-card wm-card" role="dialog" aria-modal="true" aria-labelledby="wikiFormTitle">
-    <div class="modal-head wm-head">
-      <h2 id="wmTitle" class="modal-title">Статья энциклопедии</h2>
-      <button class="sibtn modal-close" id="wmClose" aria-label="Закрыть">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="modal-body wm-body">
-      <input type="text" id="wmName" class="wm-input" placeholder="Название термина" maxlength="80">
-      <div id="wmTypeChips" class="wm-type-chips"></div>
-      <span id="wmTypeBadge" class="wm-badge"></span>
-      <textarea id="wmDesc" class="wm-textarea" placeholder="Описание термина..." rows="4"></textarea>
-      <div id="wmPrev" class="wm-preview"></div>
-    </div>
-    <div class="modal-foot wm-foot">
-      <button class="chip" id="wmCancel">Отмена</button>
-      <button class="chip on" id="wmSave">Сохранить</button>
-      <button class="chip danger" id="wmDelete" style="display:none">Удалить</button>
-    </div>
-  </div>
-</div>
+    fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    lerp(t, a, b) { return a + t * (b - a); }
+    grad(hash, x) {
+        const h = hash & 15;
+        let grad = 1 + (h & 7); 
+        if ((h & 8) !== 0) grad = -grad;
+        return grad * x;
+    }
 
-<!-- Вуаль для мобильных -->
-<div id="veil" hidden></div>
+    noise(x) {
+        const X = Math.floor(x) & 255;
+        x -= Math.floor(x);
+        const u = this.fade(x);
+        return this.lerp(u, 
+            this.grad(this.perm[X], x), 
+            this.grad(this.perm[X + 1], x - 1)
+        ) * 2; // Нормализация примерно к [-1, 1]
+    }
+}
 
-<div id="printBook" class="print-book" aria-hidden="true"></div>
+const noise = new SimpleNoise();
+const world = [];
+const trees = [];
 
-<script src="js/app.js"></script>
+function generateWorld() {
+    // Инициализация пустого мира
+    for (let x = 0; x < WORLD_WIDTH; x++) {
+        world[x] = new Array(WORLD_HEIGHT).fill(BLOCKS.AIR);
+    }
+
+    // Генерация ландшафта
+    const baseHeight = WORLD_HEIGHT / 2;
+    const amplitude = 15;
+    
+    for (let x = 0; x < WORLD_WIDTH; x++) {
+        // Комбинируем несколько частот для детализации
+        let n = noise.noise(x * 0.05) * amplitude + 
+                noise.noise(x * 0.1) * (amplitude / 2);
+        
+        let groundLevel = Math.floor(baseHeight + n);
+
+        for (let y = 0; y < WORLD_HEIGHT; y++) {
+            if (y < groundLevel) {
+                world[x][y] = BLOCKS.AIR;
+            } else if (y === groundLevel) {
+                world[x][y] = BLOCKS.GRASS;
+                // Шанс сгенерировать дерево
+                if (x > 5 && x < WORLD_WIDTH - 5 && Math.random() < 0.05) {
+                    generateTree(x, y + 1);
+                }
+            } else if (y > groundLevel && y < groundLevel + 5) {
+                world[x][y] = BLOCKS.DIRT;
+            } else {
+                // Пещеры (второй слой шума)
+                let caveNoise = noise.noise(x * 0.1 + y * 0.1);
+                if (caveNoise > 0.6) {
+                    world[x][y] = BLOCKS.AIR; // Пещера
+                } else {
+                    world[x][y] = BLOCKS.STONE;
+                }
+            }
+        }
+    }
+}
+
+function generateTree(x, y) {
+    const height = 3 + Math.floor(Math.random() * 3);
+    // Ствол
+    for (let i = 0; i < height; i++) {
+        if (y - i >= 0) world[x][y - i] = BLOCKS.WOOD;
+    }
+    // Листва
+    for (let lx = x - 2; lx <= x + 2; lx++) {
+        for (let ly = y - height - 2; ly <= y - height; ly++) {
+            if (lx >= 0 && lx < WORLD_WIDTH && ly >= 0 && Math.abs(lx - x) + Math.abs(ly - (y - height)) < 4) {
+                if (world[lx][ly] === BLOCKS.AIR) {
+                    world[lx][ly] = BLOCKS.LEAVES;
+                }
+            }
+        }
+    }
+}
+
+// --- ИГРОК ---
+const player = {
+    x: WORLD_WIDTH * TILE_SIZE / 2,
+    y: 0, // Будет установлено при спавне
+    width: 20,
+    height: 48, // Чуть меньше 2 блоков
+    vx: 0,
+    vy: 0,
+    grounded: false,
+    selectedBlock: BLOCKS.DIRT
+};
+
+// Находим поверхность для спавна
+function spawnPlayer() {
+    const midX = Math.floor(WORLD_WIDTH / 2);
+    for (let y = 0; y < WORLD_HEIGHT; y++) {
+        if (world[midX][y] !== BLOCKS.AIR) {
+            player.y = (y - 2) * TILE_SIZE;
+            player.x = midX * TILE_SIZE;
+            return;
+        }
+    }
+    player.y = 0;
+}
+
+// --- УПРАВЛЕНИЕ ---
+const keys = {};
+const mouse = { x: 0, y: 0, left: false, right: false };
+
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if (e.key >= '1' && e.key <= '5') {
+        const blocks = [BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.STONE, BLOCKS.WOOD, BLOCKS.LEAVES];
+        player.selectedBlock = blocks[parseInt(e.key) - 1];
+        updateInventoryUI();
+    }
+});
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.imageSmoothingEnabled = false;
+}
+window.addEventListener('resize', resize);
+resize();
+
+canvas.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+canvas.addEventListener('mousedown', e => {
+    if (e.button === 0) mouse.left = true;
+    if (e.button === 2) mouse.right = true;
+});
+canvas.addEventListener('mouseup', e => {
+    if (e.button === 0) mouse.left = false;
+    if (e.button === 2) mouse.right = false;
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// --- ФИЗИКА И КОЛЛИЗИИ ---
+function checkCollision(newX, newY) {
+    // Проверяем углы хитбокса игрока
+    const points = [
+        { x: newX, y: newY },
+        { x: newX + player.width, y: newY },
+        { x: newX, y: newY + player.height },
+        { x: newX + player.width, y: newY + player.height }
+    ];
+
+    for (let p of points) {
+        const tx = Math.floor(p.x / TILE_SIZE);
+        const ty = Math.floor(p.y / TILE_SIZE);
+
+        if (tx < 0 || tx >= WORLD_WIDTH || ty < 0 || ty >= WORLD_HEIGHT) continue;
+        
+        if (world[tx][ty] !== BLOCKS.AIR) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function updatePhysics() {
+    // Горизонтальное движение
+    if (keys['KeyA'] || keys['ArrowLeft']) player.vx = -PLAYER_SPEED;
+    else if (keys['KeyD'] || keys['ArrowRight']) player.vx = PLAYER_SPEED;
+    else player.vx = 0;
+
+    // Прыжок
+    if ((keys['KeyW'] || keys['ArrowUp'] || keys['Space']) && player.grounded) {
+        player.vy = -JUMP_FORCE;
+        player.grounded = false;
+    }
+
+    // Гравитация
+    player.vy += GRAVITY;
+    if (player.vy > TERMINAL_VELOCITY) player.vy = TERMINAL_VELOCITY;
+
+    // Применение движения с коллизиями
+    // X ось
+    if (!checkCollision(player.x + player.vx, player.y)) {
+        player.x += player.vx;
+    } else {
+        // Простое выравнивание по сетке при ударе о стену
+        player.vx = 0;
+    }
+
+    // Y ось
+    player.grounded = false;
+    if (!checkCollision(player.x, player.y + player.vy)) {
+        player.y += player.vy;
+    } else {
+        if (player.vy > 0) player.grounded = true;
+        player.vy = 0;
+        // Выравнивание по сетке
+        player.y = Math.round(player.y / TILE_SIZE) * TILE_SIZE; 
+        // Небольшая коррекция, чтобы не застревать
+        if(player.grounded) {
+             while(checkCollision(player.x, player.y - 1)) player.y--;
+        }
+    }
+
+    // Границы мира
+    if (player.x < 0) player.x = 0;
+    if (player.x > WORLD_WIDTH * TILE_SIZE - player.width) player.x = WORLD_WIDTH * TILE_SIZE - player.width;
+    if (player.y > WORLD_HEIGHT * TILE_SIZE) {
+        // Респавн если упал в бездну (баг генерации)
+        player.y = 0; 
+        player.vy = 0;
+    }
+}
+
+// --- ВЗАИМОДЕЙСТВИЕ С МИРОМ ---
+function interactWithWorld() {
+    // Камера
+    const camX = player.x - canvas.width / 2;
+    const camY = player.y - canvas.height / 2;
+
+    const mouseXWorld = mouse.x + camX;
+    const mouseYWorld = mouse.y + camY;
+
+    const tx = Math.floor(mouseXWorld / TILE_SIZE);
+    const ty = Math.floor(mouseYWorld / TILE_SIZE);
+
+    if (tx < 0 || tx >= WORLD_WIDTH || ty < 0 || ty >= WORLD_HEIGHT) return;
+
+    // Дистанция взаимодействия (5 блоков)
+    const px = player.x + player.width / 2;
+    const py = player.y + player.height / 2;
+    const dist = Math.hypot(px - mouseXWorld, py - mouseYWorld);
+
+    if (dist > 200) return; // Слишком далеко
+
+    if (mouse.left) {
+        world[tx][ty] = BLOCKS.AIR; // Копать
+    } else if (mouse.right) {
+        if (world[tx][ty] === BLOCKS.AIR) {
+            // Нельзя ставить блок внутрь игрока
+            const blockRect = { x: tx * TILE_SIZE, y: ty * TILE_SIZE, w: TILE_SIZE, h: TILE_SIZE };
+            const playerRect = { x: player.x, y: player.y, w: player.width, h: player.height };
+            
+            if (!(playerRect.x < blockRect.x + blockRect.w &&
+                  playerRect.x + playerRect.w > blockRect.x &&
+                  playerRect.y < blockRect.y + blockRect.h &&
+                  playerRect.y + playerRect.h > blockRect.y)) {
+                world[tx][ty] = player.selectedBlock;
+            }
+        }
+    }
+}
+
+// --- ОТРИСОВКА ---
+function draw() {
+    // Очистка
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Камера
+    const camX = Math.floor(player.x - canvas.width / 2);
+    const camY = Math.floor(player.y - canvas.height / 2);
+
+    ctx.save();
+    ctx.translate(-camX, -camY);
+
+    // Отрисовка видимой части мира (Culling)
+    const startCol = Math.floor(camX / TILE_SIZE);
+    const endCol = startCol + (canvas.width / TILE_SIZE) + 1;
+    const startRow = Math.floor(camY / TILE_SIZE);
+    const endRow = startRow + (canvas.height / TILE_SIZE) + 1;
+
+    for (let x = startCol; x <= endCol; x++) {
+        for (let y = startRow; y <= endRow; y++) {
+            if (x >= 0 && x < WORLD_WIDTH && y >= 0 && y < WORLD_HEIGHT) {
+                const block = world[x][y];
+                if (block !== BLOCKS.AIR) {
+                    ctx.fillStyle = BLOCK_COLORS[block];
+                    ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    
+                    // Добавим немного "текстуры" (рамка)
+                    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                    ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
+            }
+        }
+    }
+
+    // Отрисовка игрока
+    ctx.fillStyle = '#FF5722'; // Оранжевый персонаж
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+    
+    // Глаза (чтобы было видно направление)
+    ctx.fillStyle = 'white';
+    const eyeOffset = player.vx >= 0 ? 12 : 4;
+    ctx.fillRect(player.x + eyeOffset, player.y + 8, 4, 4);
+
+    // Курсор выделения
+    const mouseXWorld = mouse.x + camX;
+    const mouseYWorld = mouse.y + camY;
+    const tx = Math.floor(mouseXWorld / TILE_SIZE);
+    const ty = Math.floor(mouseYWorld / TILE_SIZE);
+    
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+    ctx.restore();
+}
+
+// --- UI ИНВЕНТАРЯ ---
+function initInventory() {
+    const inv = document.getElementById('inventory');
+    const items = [
+        { type: BLOCKS.DIRT, color: BLOCK_COLORS[BLOCKS.DIRT] },
+        { type: BLOCKS.GRASS, color: BLOCK_COLORS[BLOCKS.GRASS] },
+        { type: BLOCKS.STONE, color: BLOCK_COLORS[BLOCKS.STONE] },
+        { type: BLOCKS.WOOD, color: BLOCK_COLORS[BLOCKS.WOOD] },
+        { type: BLOCKS.LEAVES, color: BLOCK_COLORS[BLOCKS.LEAVES] }
+    ];
+
+    items.forEach((item, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.style.backgroundColor = item.color;
+        slot.onclick = () => {
+            player.selectedBlock = item.type;
+            updateInventoryUI();
+        };
+        slot.id = `slot-${index}`;
+        inv.appendChild(slot);
+    });
+    updateInventoryUI();
+}
+
+function updateInventoryUI() {
+    const map = [BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.STONE, BLOCKS.WOOD, BLOCKS.LEAVES];
+    const idx = map.indexOf(player.selectedBlock);
+    document.querySelectorAll('.slot').forEach((el, i) => {
+        if (i === idx) el.classList.add('active');
+        else el.classList.remove('active');
+    });
+}
+
+// --- ГЛАВНЫЙ ЦИКЛ ---
+generateWorld();
+spawnPlayer();
+initInventory();
+
+function loop() {
+    updatePhysics();
+    interactWithWorld();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+
+</script>
 </body>
 </html>
